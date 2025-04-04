@@ -1,2 +1,9 @@
 # geneticAI
-Ejemplo de funcionamiento de un algoritmo genético
+Esta es una simulación de cómo funciona un algoritmo genético
+
+# Instalación
+- Descargar el archivo index.html
+- Abir en el navegador
+
+# Versión en línea
+- https://jorgecif.github.io/geneticAI/

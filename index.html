@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Algoritmo Genético - Simulación</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #e9f0f5;
+      color: #333;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #005577;
+    }
+
+    label, input, button {
+      font-size: 1rem;
+      margin-top: 10px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #bbb;
+      border-radius: 5px;
+      box-sizing: border-box;
+      margin-top: 5px;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background-color: #0077aa;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #005f88;
+    }
+
+    .info {
+      margin-top: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .resultado {
+      font-size: 1.5em;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    .individuos {
+      font-family: monospace;
+      white-space: pre;
+      background: #fefefe;
+      padding: 10px;
+      border-radius: 5px;
+      height: 200px;
+      overflow-y: scroll;
+      border: 1px solid #ddd;
+      margin-top: 10px;
+    }
+
+    .etiqueta {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Simulación de Algoritmo Genético</h1>
+
+  <label for="inputTarget">Ingresa la frase objetivo:</label>
+  <input type="text" id="inputTarget" placeholder="Ej: Hola mundo" />
+  <button onclick="iniciarSimulacion()">Iniciar Simulación</button>
+
+  <div class="info" id="panelSimulacion" style="display:none;">
+    <p><span class="etiqueta">Objetivo:</span> <span id="targetDisplay"></span></p>
+    <p><span class="etiqueta">Generación:</span> <span id="generation">0</span></p>
+    <p><span class="etiqueta">Mejor individuo:</span> <span class="resultado" id="best"></span></p>
+    <div class="individuos" id="population"></div>
+  </div>
+
+  <script>
+    let TARGET = "";
+    const POP_SIZE = 200;
+    const MUTATION_RATE = 0.01;
+    const CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZáéíóúñ,.!? ¡¿";
+    
+    let population = [];
+    let generation = 0;
+    let evolucionando = false;
+
+    function randomChar() {
+      return CHARS[Math.floor(Math.random() * CHARS.length)];
+    }
+
+    function randomDNA() {
+      return Array.from({length: TARGET.length}, randomChar).join("");
+    }
+
+    function fitness(individual) {
+      let score = 0;
+      for (let i = 0; i < TARGET.length; i++) {
+        if (individual[i] === TARGET[i]) score++;
+      }
+      return score / TARGET.length;
+    }
+
+    function crossover(parentA, parentB) {
+      let child = "";
+      for (let i = 0; i < TARGET.length; i++) {
+        child += Math.random() < 0.5 ? parentA[i] : parentB[i];
+      }
+      return child;
+    }
+
+    function mutate(dna) {
+      return dna.split("").map(char => (Math.random() < MUTATION_RATE ? randomChar() : char)).join("");
+    }
+
+    function iniciarSimulacion() {
+      const input = document.getElementById("inputTarget").value.trim();
+      if (input.length === 0) {
+        alert("Por favor, ingresa una frase objetivo.");
+        return;
+      }
+
+      TARGET = input;
+      document.getElementById("targetDisplay").textContent = TARGET;
+      document.getElementById("panelSimulacion").style.display = "block";
+      generation = 0;
+      evolucionando = true;
+      population = Array.from({length: POP_SIZE}, randomDNA);
+
+      evolve();
+    }
+
+    function evolve() {
+      if (!evolucionando) return;
+
+      generation++;
+      document.getElementById("generation").textContent = generation;
+
+      // Evaluar fitness
+      let scored = population.map(ind => ({ind, fit: fitness(ind)}));
+      scored.sort((a, b) => b.fit - a.fit);
+      document.getElementById("best").textContent = scored[0].ind;
+
+      // Mostrar población
+      document.getElementById("population").textContent = scored.map(s => s.ind).join("\n");
+
+      if (scored[0].ind === TARGET) {
+        evolucionando = false;
+        return;
+      }
+
+      // Selección
+      const matingPool = scored.slice(0, POP_SIZE / 2);
+
+      // Nueva generación
+      let newPopulation = [];
+      for (let i = 0; i < POP_SIZE; i++) {
+        let parentA = matingPool[Math.floor(Math.random() * matingPool.length)].ind;
+        let parentB = matingPool[Math.floor(Math.random() * matingPool.length)].ind;
+        let child = crossover(parentA, parentB);
+        child = mutate(child);
+        newPopulation.push(child);
+      }
+
+      population = newPopulation;
+
+      setTimeout(evolve, 100); // Siguiente generación
+    }
+  </script>
+</body>
+</html>
+
